@@ -1,0 +1,132 @@
+# weekly-scheduler.yaml — recap → issues → structure → 1週間スケジュール
+# Plagger-like pipeline definition (plabber互換形式)
+#
+# 実行:
+#   cd MEGA/plabber && bun run ./cmd/plabber.ts run -c examples/weekly-scheduler.yaml
+#   または hermes cron から POST /run/file
+
+global:
+  timezone: "Asia/Tokyo"
+  # opencode-go LLM provider (Go定額 / zen無料)
+  llm:
+    primary: "opencode-go/deepseek-v4-flash"
+    fallback: "opencode-go/big-pickle"
+    structure_fallback: "opencode-go/deepseek-v4-pro"
+    api_key_env: "OPENCODE_GO_API_KEY"
+    base_url_env: "OPENCODE_GO_BASE_URL"
+
+plugins:
+  # ── ① Subscription: recap ファイル収集 ──────────────────────
+  - module: Subscription::Recap
+    config:
+      path: "../../wiki/raw"
+      pattern: "recap-*.md"
+      days: 7                      # 直近何日分を対象とするか
+      # cron実行時: 前週日曜〜土曜の recap を収集
+
+  # ── ② Filter: recap → ActionItem 抽出 (LLM) ─────────────────
+  - module: Filter::Extract
+    config:
+      model: "${llm.primary}"      # opencode-go/deepseek-v4-flash (Go定額)
+      fallback_model: "${llm.fallback}"  # opencode-go/big-pickle (zen無料)
+      structured_output: true      # Pydantic検証付き
+      outputField: action_items     # EntryRow に action_items を追加
+      system: |
+        あなたは作業セッションのrecapからアクションアイテムを抽出する専門家である。
+        抽出ルール:
+        1. 「残タスク」「次回以降」「todo」「P1」「P2」「やること」「未完了」等から抽出
+        2. 完了済みタスクは抽出しない
+        3. 明示的に書かれていることのみ抽出。推測で作らない
+        4. 動詞で始まる簡潔なタイトルにする
+        type判定: todo=個人メモ/調査 | issue=開発タスク | ticket=外部起点
+      prompt: |
+        以下のrecapからアクションアイテムを抽出せよ。
+        recapファイル: ${source}
+        ---
+        ${content}
+        ---
+      schema:
+        title: str
+        type: "todo|issue|ticket"
+        project_hint: "str|none"
+        source_recap: str
+        source_section: str
+        raw_text: str
+
+  # ── ③ Publish: ActionItem → tasque DB + GitHub Issues ───────
+  - module: Publish::TaskDB
+    config:
+      dailyDb: "../db/daily.task.db"
+      codingDb: "../db/coding.task.db"
+      idempotency_key: "recap:${source_recap}:${sha8}"  # sha8(raw_text)
+      # type=issue かつ project_hint が owner/repo 形式の場合 gh issue create
+      gh_create: true
+      gh_label: "recap-auto"
+
+  # ── ④ Filter: priority / duration / dependencies 構造化 (LLM) ─
+  - module: Filter::Structure
+    config:
+      model: "${llm.primary}"       # opencode-go/deepseek-v4-flash
+      fallback_model: "${llm.structure_fallback}"  # opencode-go/deepseek-v4-pro
+      structured_output: true
+      outputField: structured_tasks
+      batch: true                   # 全タスク1プロンプトで処理
+      # 依存関係は task_links テーブルに書き戻し
+      write_back:
+        issue:
+          fields: [priority, duration_min, due_date]
+          table: "coding.task.db/issue"
+        todo:
+          fields: [priority, duration_min, due_date]
+          table: "daily.task.db/todo"
+        task_links:
+          table: "coding.task.db/task_links"
+      system: |
+        タスク管理の専門家として、各タスクの優先度・見積もり時間・依存関係を推定せよ。
+        優先度スケール:
+          +2=緊急(今日必須) +1=高(今週中) 0=既定 -1=低 -2=任意
+        見積もり: 15/25/30/45/60/90/120 分のいずれか
+        依存関係: 他タスク完了後に着手すべき場合その番号を指定(DAG)
+      schema:
+        temp_id: int
+        priority: "-2..+2"
+        duration_min: "15|25|30|45|60|90|120"
+        dependencies: "list[int]"
+        due_date: "YYYY-MM-DD|none"
+
+  # ── ⑤ Filter: networkx トポロジカルソート + bin packing ──────
+  - module: Filter::Schedule
+    config:
+      algorithm: topological_sort   # networkx Kahn's algorithm
+      priority_queue: true          # high priority 先詰め
+      daily_cap_min: 480            # 1日8h
+      week_days: 5                  # 月-金
+      base_hour: 9                  # 09:00 開始
+      enforce_dag: true             # 依存関係は必ず前日以前に配置
+      respect_due_date: true        # due_date 以降には置かない
+      overflow_action: backlog       # 収まらない分は翌週バックログ
+
+  # ── ⑥ Publish: GWS Calendar / schedule.db フォールバック ────
+  - module: Publish::Calendar
+    config:
+      provider: gws                 # GWS Calendar (mito MCP経由)
+      fallback_provider: local      # schedule.db にフォールバック
+      fallback_db: "../checkpoints/schedule.db"
+      timezone: "Asia/Tokyo"
+      # event description に run_id を埋め込む (冪等上書き用)
+      run_id_in_description: true
+
+  # ── ⑦ Publish: 週間スケジュール JSON 出力 ───────────────────
+  - module: Publish::JSON
+    config:
+      file: "../checkpoints/weekly-schedule-${run_id}.json"
+      pretty: true
+      ensure_ascii: false
+      fields: [run_id, recap_paths, weekly_schedule, errors]
+
+  # ── ⑧ Publish: HTML ダッシュボード (オプション) ─────────────
+  - module: Publish::HTML
+    config:
+      output: "../checkpoints/weekly-dashboard.html"
+      title: "Weekly Scheduler Dashboard"
+      template: gantt              # ガントチャート風テンプレート
