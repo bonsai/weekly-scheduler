@@ -1,0 +1,11 @@
+{
+  "run_id": "2026-07-29T20:57",
+  "recap_paths": [
+    "/home/sexy/wiki/raw/recap-0729.md"
+  ],
+  "weekly_schedule": [],
+  "errors": [
+    "LLM init deepseek-chat: list[state.ActionItem] is not a module, class, method, or function.",
+    "LLM init deepseek-reasoner: list[state.ActionItem] is not a module, class, method, or function."
+  ]
+}
