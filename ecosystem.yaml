@@ -1,0 +1,21 @@
+ecosystem:
+  id: planning-time
+  version: "0.1"
+  role: scheduler
+  responsibility:
+    - place tasks and time kits into the week
+    - respect priorities
+    - respect dependencies
+    - manage weekly capacity
+  input:
+    - tasks
+    - time_kits
+    - constraints
+  output:
+    - weekly_schedule
+  upstream:
+    - bonsai/plan-editor
+    - bonsai/time-boxer
+  downstream:
+    - bonsai/workflow
+  principle: scheduling and capacity optimization; not task planning
