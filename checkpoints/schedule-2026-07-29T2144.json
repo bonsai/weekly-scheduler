@@ -1,0 +1,66 @@
+{
+  "run_id": "2026-07-29T21:44",
+  "recap_paths": [
+    "/home/sexy/wiki/raw/recap-0722.md",
+    "/home/sexy/wiki/raw/recap-0729.md"
+  ],
+  "weekly_schedule": [
+    {
+      "date": "2026-08-03",
+      "tasks": [
+        {
+          "db_id": 1,
+          "title": "agents.db を復旧または移行する",
+          "start": "09:00",
+          "end": "10:30",
+          "depends_on": []
+        },
+        {
+          "db_id": 5,
+          "title": ".auto-recap cron の内容を充実化するか廃止する",
+          "start": "10:30",
+          "end": "11:00",
+          "depends_on": []
+        }
+      ]
+    },
+    {
+      "date": "2026-08-04",
+      "tasks": [
+        {
+          "db_id": 4,
+          "title": "deploy-db MCP のスキーマを修復する",
+          "start": "09:00",
+          "end": "10:00",
+          "depends_on": [
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "date": "2026-08-05",
+      "tasks": [
+        {
+          "db_id": 3,
+          "title": "cloud consultant 3体の実運用テストを行う",
+          "start": "09:00",
+          "end": "10:00",
+          "depends_on": [
+            1,
+            4
+          ]
+        }
+      ]
+    },
+    {
+      "date": "2026-08-06",
+      "tasks": []
+    },
+    {
+      "date": "2026-08-07",
+      "tasks": []
+    }
+  ],
+  "errors": []
+}

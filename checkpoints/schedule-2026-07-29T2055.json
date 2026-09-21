@@ -1,0 +1,11 @@
+{
+  "run_id": "2026-07-29T20:55",
+  "recap_paths": [
+    "/home/sexy/wiki/raw/recap-0729.md"
+  ],
+  "weekly_schedule": [],
+  "errors": [
+    "LLM init opencode-go/deepseek-v4-flash: Missing credentials. Please pass an `api_key`, `workload_identity`, `admin_api_key`, or set the `OPENAI_API_KEY` or `OPENAI_ADMIN_KEY` environment variable.",
+    "LLM init opencode-go/big-pickle: Missing credentials. Please pass an `api_key`, `workload_identity`, `admin_api_key`, or set the `OPENAI_API_KEY` or `OPENAI_ADMIN_KEY` environment variable."
+  ]
+}
