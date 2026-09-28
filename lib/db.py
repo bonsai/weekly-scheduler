@@ -1,6 +1,5 @@
 """db.py — tasque DB (daily.task.db / coding.task.db) 接続・task_links 管理
 
-DB は ~/repo/second-brains/db/ に配置 (ON CLOUD 設計準拠)。
 テーブルが未作成の場合は初期化スキーマを実行する。
 
 スキーマは tasque skill references/schema.md に準拠しつつ、

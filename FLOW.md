@@ -20,8 +20,6 @@ gather → extract → create → structure → schedule
 |--------|----------|------|
 | opencode.db | SQLite (`~/.local/share/opencode/opencode.db`) | セッション履歴（タイトル・モデル・費用） |
 | GitHub Issues | `gh issue list --repo bonsai/second-brains` | 未完了 Issue |
-| issues.sqlite | SQLite (`~/repo/second-brains/db/issues.sqlite`) | 全ソース同期 Issue |
-| coding.task.db | SQLite (`~/repo/second-brains/db/coding.task.db`) | tasque 未完了タスク |
 | wiki/raw/recap-*.md | ファイル読込 (`~/wiki/raw/`) | 週次レキャップ |
 
 ## LLM 設定

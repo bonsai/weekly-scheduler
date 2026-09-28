@@ -312,15 +312,6 @@ def schedule_week(tasks: list[StructuredTask]) -> list[DaySchedule]:
   prompt: "先週のrecapから週間スケジュールを生成し、カレンダーに登録せよ"
 ```
 
-### second-brains (cloud)
-```
-DB配置:
-  ~/repo/second-brains/db/daily.task.db
-  ~/repo/second-brains/db/coding.task.db
-
-  git push でクラウド同期（不定期的）
-```
-
 ---
 
 ## 6. 自律化戦略

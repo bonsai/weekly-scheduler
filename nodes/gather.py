@@ -7,7 +7,6 @@ coding.task.db、recap ファイルを収集し、extract node が扱う
 利用条件:
   - gh CLI が認証済み (bonsai org)
   - opencode.db が存在 (~/.local/share/opencode/opencode.db)
-  - second-brains DB 群が存在 (~/repo/second-brains/db/)
 
 使用法:
     from nodes.gather import gather_all
